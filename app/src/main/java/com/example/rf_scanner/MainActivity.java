@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private Vector<String> nodeNames;
     private Vector<String> stringToDisplay;
 
+    private Communication communication;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,10 +81,52 @@ public class MainActivity extends AppCompatActivity {
             adapter = new ArrayAdapter<>(this, R.layout.list_row, stringToDisplay);
             listView.setAdapter(adapter);
 
+            communication=new Communication(this);
+
             showInfoButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     showInfo();
+                }
+            });
+
+            turnOffAlarmButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    communication.sendEndAlarmMessage();
+                }
+            });
+
+            changeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    String str=changeEditText.getText().toString();
+                    int newValue=Integer.valueOf(str);
+                    if((newValue>=0)&&(newValue<=255)) communication.sendChangeMessage(newValue);
+                }
+            });
+
+            getListButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(communication.sendGetListMessage()==true)
+                    {
+                        nodeAddresses.clear();
+                        nodeNames.clear();
+                        stringToDisplay.clear();
+                        int[] buffer;
+                        buffer=communication.getIncomingData();
+                        for(int i=7;i<buffer.length;i++)
+                        {
+                            nodeAddresses.add(String.valueOf(buffer[i]));
+                            nodeNames.add("Name"+String.valueOf(buffer[i]));
+                        }
+                        for(int i=0;i<nodeAddresses.size();i++)
+                        {
+                            stringToDisplay.add(nodeAddresses.elementAt(i)+": "+nodeNames.elementAt(i));
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
                 }
             });
         }
