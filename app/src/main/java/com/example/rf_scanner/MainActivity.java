@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Communication communication;
 
+    private DataTransfer dataTransfer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        dataTransfer=DataTransfer.getInstance();
 
         if(checkPermissions()==false) lackOfSomePermission();
         else
@@ -127,6 +131,17 @@ public class MainActivity extends AppCompatActivity {
                         }
                         adapter.notifyDataSetChanged();
                     }
+                }
+            });
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    dataTransfer.currentNodeAddress=nodeAddresses.elementAt(position);
+                    dataTransfer.currentNodeName=nodeNames.elementAt(position);
+                    dataTransfer.currentPosition=position;
+                    Intent intent = new Intent(MainActivity.this, LastMeas.class);
+                    startActivityForResult(intent,1);
                 }
             });
         }
@@ -225,6 +240,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         catch (IOException e) {e.printStackTrace();}
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(dataTransfer.nameChanged)
+        {
+            nodeNames.set(dataTransfer.currentPosition,dataTransfer.newName);
+            stringToDisplay.set(dataTransfer.currentPosition,dataTransfer.currentNodeAddress+":"+dataTransfer.newName);
+            dataTransfer.nameChanged=false;
+        }
     }
 
 }
