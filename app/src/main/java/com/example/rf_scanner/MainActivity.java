@@ -140,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
                     dataTransfer.currentNodeAddress=nodeAddresses.elementAt(position);
                     dataTransfer.currentNodeName=nodeNames.elementAt(position);
                     dataTransfer.currentPosition=position;
+                    dataTransfer.communication=communication;
                     Intent intent = new Intent(MainActivity.this, LastMeas.class);
                     startActivityForResult(intent,1);
                 }
@@ -219,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setContentView(R.layout.activity_main);
-
             }
         });
 

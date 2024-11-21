@@ -9,11 +9,13 @@ public class Communication {
 
     private BluetoothConnection bluetoothConnection;
     private Context context;
+    private DataTransfer dataTransfer;
 
     Communication(Context ctx)
     {
         context=ctx;
         bluetoothConnection=new BluetoothConnection(context);
+        dataTransfer=DataTransfer.getInstance();
     }
 
     private void checkIfBluetoothOnAndIfNotAsked()
@@ -70,6 +72,31 @@ public class Communication {
 
         checkIfBluetoothOnAndIfNotAsked();
         generateOutgoingMessage(0,0,0);
+        send();
+
+        String resultInfo;
+        if(dataCame)
+        {
+            resultInfo="Data acquired.";
+        }
+        else
+        {
+            resultInfo="Error of connection.";
+        }
+        Toast toast1 = Toast.makeText(context, resultInfo, Toast.LENGTH_LONG);
+        toast1.show();
+
+        if(dataCame) return true;
+        return false;
+    }
+
+    public boolean sendGetLastDataRequest()
+    {
+        Toast toast = Toast.makeText(context, "Downloading...", Toast.LENGTH_LONG);
+        toast.show();
+
+        checkIfBluetoothOnAndIfNotAsked();
+        generateOutgoingMessage(8,Integer.parseInt(dataTransfer.currentNodeAddress),0);
         send();
 
         String resultInfo;

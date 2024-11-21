@@ -16,4 +16,6 @@ public class DataTransfer {
     public boolean nameChanged;
     public String newName;
 
+    public Communication communication;
+
 }
