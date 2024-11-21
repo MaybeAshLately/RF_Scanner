@@ -16,10 +16,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Vector;
 
 public class LastMeas extends AppCompatActivity {
     private DataTransfer dataTransfer;
@@ -33,6 +40,8 @@ public class LastMeas extends AppCompatActivity {
     private String name;
     private String address;
     private int[] incomingDataBuffer;
+
+    private String formattedDateTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +67,7 @@ public class LastMeas extends AppCompatActivity {
         nameText.setText(name);
         addressText.setText(address);
 
+        getDataFromFileIfExist();
         showTable();
 
         goBackButton.setOnClickListener(new View.OnClickListener() {
@@ -78,12 +88,32 @@ public class LastMeas extends AppCompatActivity {
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(dataTransfer.communication.sendGetLastDataRequest())
-                {
-                    incomingDataBuffer=dataTransfer.communication.getIncomingData();
-                    updateTime();
-                    showTable();
-                }
+
+                refreshButton.setBackgroundColor(getResources().getColor(R.color.gray));
+                refreshButton.setText("Downloading...");
+                refreshButton.setEnabled(false);
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                refreshButton.setText("Refresh");
+                                refreshButton.setBackgroundColor(getResources().getColor(R.color.green));
+                                refreshButton.setEnabled(true);
+
+                                if(dataTransfer.communication.sendGetLastDataRequest())
+                                {
+                                    incomingDataBuffer=dataTransfer.communication.getIncomingData();
+                                    updateTime();
+                                    showTable();
+                                }
+                            }
+                        });
+                    }
+                }).start();
+
             }
         });
 
@@ -207,8 +237,44 @@ public class LastMeas extends AppCompatActivity {
         ZoneId zoneId = ZoneId.of("Europe/Warsaw");
         ZonedDateTime zonedDateTime = instant.atZone(zoneId);
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-        String formattedDateTime = zonedDateTime.format(dateTimeFormatter);
+        formattedDateTime = zonedDateTime.format(dateTimeFormatter);
         timeTextView.setText(formattedDateTime);
+    }
+
+    /* Data format in NodeAddress.txt
+        Line | data
+        1    | timeOfMeasurement ("dd.MM.yyyy HH:mm:ss")
+        2    | numberOfSignalsOnChannel0
+        ...  | ...
+        126    | numberOfSignalsOnChannel125
+         */
+    private void getDataFromFileIfExist()
+    {
+        String fileName=dataTransfer.currentNodeAddress+".txt";
+        Vector<String> fileContent;
+        fileContent=new Vector<>();
+
+        File file = getFileStreamPath(fileName);
+        if(file.exists()==false) return;
+        try(FileInputStream fileInputStream = this.openFileInput(fileName);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream))) {
+            String bufferLine;
+            while ((bufferLine = reader.readLine()) != null) fileContent.add(bufferLine);
+        } catch (IOException e) { e.printStackTrace(); }
+
+        if(fileContent.isEmpty()) return;
+        formattedDateTime=fileContent.elementAt(0);
+        timeTextView.setText(formattedDateTime);
+
+        incomingDataBuffer=new int[137];
+        for(int i=0;i<7;i++)
+        {
+            incomingDataBuffer[i]=0;
+        }
+        for(int i=7;i<133;i++)
+        {
+            incomingDataBuffer[i]=Integer.parseInt(fileContent.elementAt(i-6));
+        }
     }
 
     @Override
@@ -218,5 +284,26 @@ public class LastMeas extends AppCompatActivity {
         {
             nameText.setText(dataTransfer.newName);
         }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if(incomingDataBuffer!=null)
+        {
+            try (FileOutputStream fileOutputStream = openFileOutput(dataTransfer.currentNodeAddress+".txt", this.MODE_PRIVATE)) {
+                fileOutputStream.write(formattedDateTime.getBytes());
+                fileOutputStream.write("\n".getBytes());
+                for(int i=0;i<126;i++)
+                {
+                    fileOutputStream.write(String.valueOf(incomingDataBuffer[i+7]).getBytes());
+                    fileOutputStream.write("\n".getBytes());
+                }
+            }
+            catch (IOException e) {e.printStackTrace();}
+        }
+
     }
 }

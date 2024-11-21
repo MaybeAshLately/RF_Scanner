@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -113,24 +114,45 @@ public class MainActivity extends AppCompatActivity {
             getListButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(communication.sendGetListMessage()==true)
-                    {
-                        nodeAddresses.clear();
-                        nodeNames.clear();
-                        stringToDisplay.clear();
-                        int[] buffer;
-                        buffer=communication.getIncomingData();
-                        for(int i=7;i<buffer.length;i++)
-                        {
-                            nodeAddresses.add(String.valueOf(buffer[i]));
-                            nodeNames.add("Name"+String.valueOf(buffer[i]));
+                    getListButton.setBackgroundColor(getResources().getColor(R.color.gray));
+                    getListButton.setText("Downloading...");
+                    getListButton.setEnabled(false);
+
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getListButton.setText("Get/update node list");
+                                    getListButton.setBackgroundColor(getResources().getColor(R.color.green));
+                                    getListButton.setEnabled(true);
+
+                                    if(communication.sendGetListMessage()==true)
+                                    {
+                                        nodeAddresses.clear();
+                                        nodeNames.clear();
+                                        stringToDisplay.clear();
+                                        int[] buffer;
+                                        buffer=communication.getIncomingData();
+                                        for(int i=7;i<buffer.length;i++)
+                                        {
+                                            nodeAddresses.add(String.valueOf(buffer[i]));
+                                            nodeNames.add("Name"+String.valueOf(buffer[i]));
+                                        }
+                                        for(int i=0;i<nodeAddresses.size();i++)
+                                        {
+                                            stringToDisplay.add(nodeAddresses.elementAt(i)+": "+nodeNames.elementAt(i));
+                                        }
+                                        adapter.notifyDataSetChanged();
+                                    }
+                                }
+                            });
                         }
-                        for(int i=0;i<nodeAddresses.size();i++)
-                        {
-                            stringToDisplay.add(nodeAddresses.elementAt(i)+": "+nodeNames.elementAt(i));
-                        }
-                        adapter.notifyDataSetChanged();
-                    }
+                    }).start();
+
+
                 }
             });
 
@@ -199,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
                 String bufferLine;
                 while ((bufferLine = reader.readLine()) != null) fileContent.add(bufferLine);
             } catch (IOException e) { e.printStackTrace(); }
+
             criticalLevel=Integer.parseInt(fileContent.elementAt(0));
             for(int i=1;i<fileContent.size();i++)
             {

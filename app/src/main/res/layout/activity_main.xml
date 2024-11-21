@@ -95,7 +95,7 @@
             android:layout_weight="1"
             android:text="Turn off the alarm"
             android:textColor="@color/black"
-            android:backgroundTint="@color/yellow"
+            android:backgroundTint="@color/purple"
             />
     </TableRow>
 
