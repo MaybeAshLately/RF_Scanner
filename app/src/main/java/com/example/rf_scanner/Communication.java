@@ -106,7 +106,7 @@ public class Communication {
         }
         else
         {
-            resultInfo="Error of connection.";
+            resultInfo="Error of connection. Please make sure you have paired the phone with RF_SCANNER_SERVER device.";
         }
         Toast toast1 = Toast.makeText(context, resultInfo, Toast.LENGTH_LONG);
         toast1.show();
