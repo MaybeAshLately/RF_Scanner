@@ -31,7 +31,6 @@ import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity {
     private Button getListButton;
-    private Button showInfoButton;
     private Button turnOffAlarmButton;
     private Button changeButton;
     private EditText changeEditText;
@@ -66,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
         else
         {
             getListButton= findViewById(R.id.get_list);
-            showInfoButton= findViewById(R.id.app_info);
             turnOffAlarmButton= findViewById(R.id.off_alarm);
             changeButton= findViewById(R.id.change_critical);
             changeEditText= findViewById(R.id.critical_level_edit_text);
@@ -86,13 +84,6 @@ public class MainActivity extends AppCompatActivity {
             listView.setAdapter(adapter);
 
             communication=new Communication(this);
-
-            showInfoButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    showInfo();
-                }
-            });
 
             turnOffAlarmButton.setOnClickListener(new View.OnClickListener() {
                 @Override
