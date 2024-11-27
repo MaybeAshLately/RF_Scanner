@@ -49,6 +49,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.rf_scanner.EditName" />
         </activity>
+
+        <activity
+            android:name=".HistMeas"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.rf_scanner.HistMeas" />
+        </activity>
     </application>
 
 </manifest>

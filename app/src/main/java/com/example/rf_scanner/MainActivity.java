@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
             {
                 stringToDisplay.add(nodeAddresses.elementAt(i)+": "+nodeNames.elementAt(i));
             }
-            changeEditText.setText(String.valueOf(criticalLevel));
 
             listView=findViewById(R.id.list);
             adapter = new ArrayAdapter<>(this, R.layout.list_row, stringToDisplay);

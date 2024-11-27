@@ -19,7 +19,6 @@ import androidx.core.view.WindowInsetsCompat;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
@@ -28,12 +27,12 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 
-public class LastMeas extends AppCompatActivity {
+public class HistMeas extends AppCompatActivity {
+
     private DataTransfer dataTransfer;
     private Button goBackButton;
-    private Button changeNameButton;
-    private Button refreshButton;
-    private Button historicButton;
+    private Button nextButton;
+    private Button previousButton;
     private TextView nameText;
     private TextView addressText;
     private TextView timeTextView;
@@ -44,11 +43,13 @@ public class LastMeas extends AppCompatActivity {
 
     private String formattedDateTime;
 
+    private int linesBack=0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.last_meas);
+        setContentView(R.layout.hist_meas);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -56,12 +57,11 @@ public class LastMeas extends AppCompatActivity {
         });
         dataTransfer = DataTransfer.getInstance();
         goBackButton=findViewById(R.id.go_back);
-        changeNameButton=findViewById(R.id.change_name);
-        refreshButton=findViewById(R.id.refresh);
-        historicButton=findViewById(R.id.historic_data);
         nameText=findViewById(R.id.name);
         addressText=findViewById(R.id.address);
         timeTextView=findViewById(R.id.time);
+        previousButton=findViewById(R.id.previous);
+        nextButton=findViewById(R.id.next);
 
         address=dataTransfer.currentNodeAddress;
         name=dataTransfer.currentNodeName;
@@ -69,7 +69,16 @@ public class LastMeas extends AppCompatActivity {
         nameText.setText(name);
         addressText.setText(address);
 
-        getDataFromFileIfExist();
+        incomingDataBuffer=dataTransfer.lastMeas;
+        if(incomingDataBuffer==null) System.out.println("NULL");
+        else
+        {
+            for(int i=0;i<incomingDataBuffer.length;i++)
+                System.out.println(incomingDataBuffer[i]);
+        }
+
+        formattedDateTime=dataTransfer.formattedDateTime;
+        timeTextView.setText(formattedDateTime);
         showTable();
 
         goBackButton.setOnClickListener(new View.OnClickListener() {
@@ -79,33 +88,15 @@ public class LastMeas extends AppCompatActivity {
             }
         });
 
-        changeNameButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(LastMeas.this, EditName.class);
-                startActivityForResult(intent,2);
-            }
-        });
 
-        historicButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dataTransfer.lastMeas=incomingDataBuffer;
-                dataTransfer.formattedDateTime=formattedDateTime;
-                Intent intent = new Intent(LastMeas.this, HistMeas.class);
-                startActivityForResult(intent,3);
-
-            }
-        });
-
-
-        refreshButton.setOnClickListener(new View.OnClickListener() {
+        previousButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                refreshButton.setBackgroundColor(getResources().getColor(R.color.gray));
-                refreshButton.setText("Downloading...");
-                refreshButton.setEnabled(false);
+                previousButton.setBackgroundColor(getResources().getColor(R.color.gray));
+                previousButton.setText("Downloading...");
+                previousButton.setEnabled(false);
+                linesBack++;
 
                 new Thread(new Runnable() {
                     @Override
@@ -113,11 +104,46 @@ public class LastMeas extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                refreshButton.setText("Refresh");
-                                refreshButton.setBackgroundColor(getResources().getColor(R.color.green));
-                                refreshButton.setEnabled(true);
+                                previousButton.setText("Previous");
+                                previousButton.setBackgroundColor(getResources().getColor(R.color.green));
+                                previousButton.setEnabled(true);
 
-                                if(dataTransfer.communication.sendGetLastDataRequest())
+                                if(dataTransfer.communication.sendGetHistoricDataRequest(linesBack))
+                                {
+                                    incomingDataBuffer=dataTransfer.communication.getIncomingData();
+                                    updateTime();
+                                    showTable();
+                                }
+                            }
+                        });
+                    }
+                }).start();
+
+            }
+        });
+
+
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                nextButton.setBackgroundColor(getResources().getColor(R.color.gray));
+                nextButton.setText("Downloading...");
+                nextButton.setEnabled(false);
+                linesBack--;
+                if(linesBack<0) linesBack=0;
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                nextButton.setText("Next");
+                                nextButton.setBackgroundColor(getResources().getColor(R.color.green));
+                                nextButton.setEnabled(true);
+
+                                if(dataTransfer.communication.sendGetHistoricDataRequest(linesBack))
                                 {
                                     incomingDataBuffer=dataTransfer.communication.getIncomingData();
                                     updateTime();
@@ -132,6 +158,7 @@ public class LastMeas extends AppCompatActivity {
         });
 
     }
+
 
     void showTable()
     {
@@ -258,69 +285,5 @@ public class LastMeas extends AppCompatActivity {
         timeTextView.setText(formattedDateTime);
     }
 
-    /* Data format in NodeAddress.txt
-        Line | data
-        1    | timeOfMeasurement ("dd.MM.yyyy HH:mm:ss")
-        2    | numberOfSignalsOnChannel0
-        ...  | ...
-        126    | numberOfSignalsOnChannel125
-         */
-    private void getDataFromFileIfExist()
-    {
-        String fileName=dataTransfer.currentNodeAddress+".txt";
-        Vector<String> fileContent;
-        fileContent=new Vector<>();
 
-        File file = getFileStreamPath(fileName);
-        if(file.exists()==false) return;
-        try(FileInputStream fileInputStream = this.openFileInput(fileName);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream))) {
-            String bufferLine;
-            while ((bufferLine = reader.readLine()) != null) fileContent.add(bufferLine);
-        } catch (IOException e) { e.printStackTrace(); }
-
-        if(fileContent.isEmpty()) return;
-        formattedDateTime=fileContent.elementAt(0);
-        timeTextView.setText(formattedDateTime);
-
-        incomingDataBuffer=new int[137];
-        for(int i=0;i<7;i++)
-        {
-            incomingDataBuffer[i]=0;
-        }
-        for(int i=7;i<137;i++)
-        {
-            incomingDataBuffer[i]=Integer.parseInt(fileContent.elementAt(i-6));
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(dataTransfer.nameChanged)
-        {
-            nameText.setText(dataTransfer.newName);
-        }
-    }
-
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        if(incomingDataBuffer!=null)
-        {
-            try (FileOutputStream fileOutputStream = openFileOutput(dataTransfer.currentNodeAddress+".txt", this.MODE_PRIVATE)) {
-                fileOutputStream.write(formattedDateTime.getBytes());
-                fileOutputStream.write("\n".getBytes());
-                for(int i=0;i<130;i++)
-                {
-                    fileOutputStream.write(String.valueOf(incomingDataBuffer[i+7]).getBytes());
-                    fileOutputStream.write("\n".getBytes());
-                }
-            }
-            catch (IOException e) {e.printStackTrace();}
-        }
-
-    }
 }

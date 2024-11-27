@@ -86,15 +86,7 @@
             android:textColor="@color/black"
             android:backgroundTint="@color/gray"
             />
-        <Button
-            android:id="@+id/change_name"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="Change name"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/gray"
-            />
+
     </TableRow>
 
 
@@ -112,48 +104,33 @@
     </TableRow>
 
 
+
+
+
+
+
+
     <TableRow
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal">
         <Button
-            android:id="@+id/refresh"
+            android:id="@+id/previous"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="Refresh"
+            android:text="Previous"
             android:textColor="@color/black"
             android:backgroundTint="@color/green"
             />
-    </TableRow>
-
-
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center_horizontal">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:gravity="center_horizontal"
-            >
-        </TextView>
-    </TableRow>
-
-
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center_horizontal">
         <Button
-            android:id="@+id/historic_data"
+            android:id="@+id/next"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="Historic data"
+            android:text="Next"
             android:textColor="@color/black"
-            android:backgroundTint="@color/yellow"
+            android:backgroundTint="@color/green"
             />
     </TableRow>
 

@@ -115,6 +115,31 @@ public class Communication {
         return false;
     }
 
+    public boolean sendGetHistoricDataRequest(int linesBack)
+    {
+        Toast toast = Toast.makeText(context, "Downloading...", Toast.LENGTH_LONG);
+        toast.show();
+
+        checkIfBluetoothOnAndIfNotAsked();
+        generateOutgoingMessage(16,Integer.parseInt(dataTransfer.currentNodeAddress),linesBack);
+        send();
+
+        String resultInfo;
+        if(dataCame)
+        {
+            resultInfo="Data acquired.";
+        }
+        else
+        {
+            resultInfo="Error of connection.";
+        }
+        Toast toast1 = Toast.makeText(context, resultInfo, Toast.LENGTH_LONG);
+        toast1.show();
+
+        if(dataCame) return true;
+        return false;
+    }
+
     public int[] getIncomingData()
     {
         return incomingData;
@@ -151,7 +176,12 @@ public class Communication {
 
         if(type==16)
         {
-            ///TODO
+            if(data<=256) outgoingMessage[7]=(byte)data;
+            else
+            {
+                outgoingMessage[7]= (byte)((data >> 8) & 0xFF);
+                outgoingMessage[8]= (byte)(data & 0xFF);
+            }
         }
         else if(type==12)
         {
@@ -184,10 +214,12 @@ public class Communication {
             data[0] = BluetoothConnection.readData();
             if (data[0] == null)
             {
+                System.out.println("SENDING");
                 BluetoothConnection.sendData(outgoingMessage);
             }
             else
             {
+                System.out.println("DATA CAME");
                 dataCame=true;
                 incomingData=data[0];
                 finish=true;
@@ -196,6 +228,7 @@ public class Communication {
 
             if(counter[0]==10)
             {
+                System.out.println("TIMEOUT");
                 dataCame=false;
                 finish=true;
                 return;

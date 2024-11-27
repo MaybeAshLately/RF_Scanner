@@ -17,5 +17,7 @@ public class DataTransfer {
     public String newName;
 
     public Communication communication;
+    int lastMeas[];
+    String formattedDateTime;
 
 }
