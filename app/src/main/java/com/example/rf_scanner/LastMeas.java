@@ -133,7 +133,7 @@ public class LastMeas extends AppCompatActivity {
 
     }
 
-    void showTable()
+    private void showTable()
     {
         TableLayout tableLayout = findViewById(R.id.tableLayout);
         tableLayout.removeAllViews();
@@ -231,7 +231,7 @@ public class LastMeas extends AppCompatActivity {
     }
 
 
-    void updateTime()
+    private void updateTime()
     {
         int timeOfMessage =0;
         timeOfMessage |= incomingDataBuffer[1];

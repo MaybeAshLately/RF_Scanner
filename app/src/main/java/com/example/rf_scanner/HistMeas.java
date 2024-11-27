@@ -1,9 +1,12 @@
 package com.example.rf_scanner;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TableLayout;
@@ -33,6 +36,7 @@ public class HistMeas extends AppCompatActivity {
     private Button goBackButton;
     private Button nextButton;
     private Button previousButton;
+    private Button clearButton;
     private TextView nameText;
     private TextView addressText;
     private TextView timeTextView;
@@ -62,6 +66,7 @@ public class HistMeas extends AppCompatActivity {
         timeTextView=findViewById(R.id.time);
         previousButton=findViewById(R.id.previous);
         nextButton=findViewById(R.id.next);
+        clearButton=findViewById(R.id.clear);
 
         address=dataTransfer.currentNodeAddress;
         name=dataTransfer.currentNodeName;
@@ -85,6 +90,14 @@ public class HistMeas extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 finish();
+            }
+        });
+
+
+        clearButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayAlert();
             }
         });
 
@@ -160,7 +173,7 @@ public class HistMeas extends AppCompatActivity {
     }
 
 
-    void showTable()
+    private void showTable()
     {
         TableLayout tableLayout = findViewById(R.id.tableLayout);
         tableLayout.removeAllViews();
@@ -258,7 +271,7 @@ public class HistMeas extends AppCompatActivity {
     }
 
 
-    void updateTime()
+    private void updateTime()
     {
         int timeOfMessage =0;
         timeOfMessage |= incomingDataBuffer[1];
@@ -283,6 +296,36 @@ public class HistMeas extends AppCompatActivity {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         formattedDateTime = zonedDateTime.format(dateTimeFormatter);
         timeTextView.setText(formattedDateTime);
+    }
+
+
+    private void displayAlert()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(HistMeas.this);
+        builder.setTitle("Clear the node");
+
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.text, null);
+        builder.setView(dialogView);
+
+        TextView txt = dialogView.findViewById(R.id.text);
+        txt.setText("Are you sure you want to clear the measurement file? Action cannot be undone.");
+
+        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dataTransfer.communication.sendClearCommand();
+            }
+        });
+
+        builder.setNegativeButton("Clear", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 

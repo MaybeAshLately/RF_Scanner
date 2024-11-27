@@ -140,6 +140,28 @@ public class Communication {
         return false;
     }
 
+    public void sendClearCommand()
+    {
+        Toast toast = Toast.makeText(context, "Sending...", Toast.LENGTH_LONG);
+        toast.show();
+
+        checkIfBluetoothOnAndIfNotAsked();
+        generateOutgoingMessage(32,Integer.parseInt(dataTransfer.currentNodeAddress),0);
+        send();
+
+        String resultInfo;
+        if(dataCame)
+        {
+            resultInfo="Data cleared.";
+        }
+        else
+        {
+            resultInfo="Error of connection.";
+        }
+        Toast toast1 = Toast.makeText(context, resultInfo, Toast.LENGTH_LONG);
+        toast1.show();
+    }
+
     public int[] getIncomingData()
     {
         return incomingData;
